@@ -18,7 +18,8 @@ class Task:
 	#ADDITION added description/time/frequency/completed status and mark_complete().
 	def mark_complete(self) -> Optional["Task"]:
 		"""Mark task complete and return next recurring task when applicable."""
-		pass
+		self.completed = True
+		return None
 
 
 #ADDITION: Created Pet dataclass with task collection and add method.
@@ -30,7 +31,10 @@ class Pet:
 
 	def add_task(self, task: Task) -> None:
 		"""Add a task to this pet."""
-		pass
+		#REFACTOR: Ensure each task knows its owning pet. Needed for filtering and UI output by pet name.
+		if not task.pet_name:
+			task.pet_name = self.name
+		self.tasks.append(task)
 
 
 #ADDITION: Owner now manages pets and can return all pet tasks through consume tasks through Owner -> Pet -> Task relationship.
@@ -41,15 +45,22 @@ class Owner:
 
 	def add_pet(self, pet: Pet) -> None:
 		"""Add a pet to this owner."""
-		pass
+		self.pets.append(pet)
 
 	def get_pet_by_name(self, pet_name: str) -> Optional[Pet]:
 		"""Return a pet by name when found."""
-		pass
+		normalized_name = pet_name.strip().lower()
+		for pet in self.pets:
+			if pet.name.strip().lower() == normalized_name:
+				return pet
+		return None
 
 	def get_all_tasks(self) -> List[Task]:
 		"""Return all tasks across all pets."""
-		pass
+		all_tasks: List[Task] = []
+		for pet in self.pets:
+			all_tasks.extend(pet.tasks)
+		return all_tasks
 
 
 #ADDITION Scheduler exposes retrieval, sorting, filtering, and conflict checks.
@@ -59,11 +70,17 @@ class Scheduler:
 
 	def get_all_tasks(self) -> List[Task]:
 		"""Return all tasks for the scheduler owner."""
-		pass
+		return self.owner.get_all_tasks()
 
 	def print_schedule(self) -> str:
 		"""Return a printable, time-sorted schedule string."""
-		pass
+		lines = ["Today's Schedule"]
+		for task in self.get_all_tasks():
+			status = "Done" if task.completed else "Pending"
+			lines.append(
+				f"- {task.time} | {task.pet_name} | {task.description} | {task.frequency} | {status}"
+			)
+		return "\n".join(lines)
 
 	def sort_by_time(self) -> List[Task]:
 		"""Sort tasks chronologically by date and HH:MM time."""
