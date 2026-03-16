@@ -48,3 +48,22 @@ pip install -r requirements.txt
 - `Scheduler.filter_tasks()` supports filtering by completion state and pet name.
 - `Scheduler.detect_conflicts()` returns warnings for tasks that share the same date/time.
 - `Task.mark_complete()` creates the next task instance for daily and weekly tasks.
+
+## Testing PawPal+
+
+Run tests with:
+
+```bash
+python -m pytest
+```
+
+Current tests cover:
+
+- Task completion updates status and recurrence behavior.
+- Adding a task increases a pet's task count.
+- Tasks are sorted chronologically.
+- Duplicate times are flagged as conflicts.
+
+## Confidence Level
+
+4/5
