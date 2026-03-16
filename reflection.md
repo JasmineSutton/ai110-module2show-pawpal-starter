@@ -26,6 +26,9 @@
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
+- Tradeoff: conflict detection checks exact date/time matches, not duration overlaps.
+- Why this is reasonable: the model stores point-in-time tasks, so exact-match checks are simple, understandable, and useful at this stage.
+
 ---
 
 ## 3. AI Collaboration

@@ -19,6 +19,27 @@ class Task:
 	def mark_complete(self) -> Optional["Task"]:
 		"""Mark task complete and return next recurring task when applicable."""
 		self.completed = True
+
+		#ADDITION: Generate next task for daily/weekly frequencies
+		normalized_frequency = self.frequency.strip().lower()
+		if normalized_frequency == "daily":
+			return Task(
+				description=self.description,
+				time=self.time,
+				frequency=self.frequency,
+				completed=False,
+				pet_name=self.pet_name,
+				due_date=self.due_date + timedelta(days=1),
+			)
+		if normalized_frequency == "weekly":
+			return Task(
+				description=self.description,
+				time=self.time,
+				frequency=self.frequency,
+				completed=False,
+				pet_name=self.pet_name,
+				due_date=self.due_date + timedelta(days=7),
+			)
 		return None
 
 
@@ -75,23 +96,48 @@ class Scheduler:
 	def print_schedule(self) -> str:
 		"""Return a printable, time-sorted schedule string."""
 		lines = ["Today's Schedule"]
-		for task in self.get_all_tasks():
+		for task in self.sort_by_time():
 			status = "Done" if task.completed else "Pending"
 			lines.append(
-				f"- {task.time} | {task.pet_name} | {task.description} | {task.frequency} | {status}"
+				f"- {task.due_date.isoformat()} {task.time} | {task.pet_name} | {task.description} | {task.frequency} | {status}"
 			)
 		return "\n".join(lines)
 
 	def sort_by_time(self) -> List[Task]:
 		"""Sort tasks chronologically by date and HH:MM time."""
-		pass
+		return sorted(self.get_all_tasks(), key=lambda task: (task.due_date, task.time))
 
 	def filter_tasks(
 		self, completed: Optional[bool] = None, pet_name: Optional[str] = None
 	) -> List[Task]:
 		"""Filter tasks by completion status and/or pet name."""
-		pass
+		filtered_tasks = self.get_all_tasks()
+		if completed is not None:
+			filtered_tasks = [
+				task for task in filtered_tasks if task.completed == completed
+			]
+		if pet_name:
+			normalized_name = pet_name.strip().lower()
+			filtered_tasks = [
+				task
+				for task in filtered_tasks
+				if task.pet_name.strip().lower() == normalized_name
+			]
+		return filtered_tasks
 
 	def detect_conflicts(self) -> List[str]:
 		"""Return warning messages for tasks that share exact date/time."""
-		pass
+		by_time_slot: dict[tuple[date, str], List[Task]] = {}
+		for task in self.get_all_tasks():
+			by_time_slot.setdefault((task.due_date, task.time), []).append(task)
+
+		warnings: List[str] = []
+		for (task_date, task_time), slot_tasks in by_time_slot.items():
+			if len(slot_tasks) > 1:
+				joined_descriptions = ", ".join(
+					task.description for task in slot_tasks
+				)
+				warnings.append(
+					f"Conflict at {task_date.isoformat()} {task_time}: {joined_descriptions}"
+				)
+		return warnings
