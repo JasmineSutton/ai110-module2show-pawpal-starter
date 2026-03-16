@@ -120,4 +120,5 @@ classDiagram
 
 ## Demo
 
-Add your final Streamlit screenshot here after manual browser verification.
+
+https://github.com/JasmineSutton/ai110-module2show-pawpal-starter/blob/main/PAW_SCREENSHOT.png
