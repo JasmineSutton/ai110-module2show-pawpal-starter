@@ -72,3 +72,10 @@
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+## AI Strategy
+
+- Most effective Copilot features: class skeleton generation, targeted method refactors, and test drafting.
+- One modified AI suggestion: broad UI rewrites were rejected in favor of minimal integration so existing instructional content stayed intact.
+- Separate chat sessions helped by isolating design, implementation, algorithm, and testing concerns.
+- Lead-architect takeaway: AI accelerates coding, but system boundaries, correctness checks, and merge decisions still require active human direction.

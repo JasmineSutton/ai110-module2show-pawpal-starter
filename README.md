@@ -67,3 +67,57 @@ Current tests cover:
 ## Confidence Level
 
 4/5
+
+## Features
+
+- Sorting by time
+- Conflict warnings
+- Daily/weekly recurrence
+- Filtering by completion status or pet name
+
+## Updated UML
+
+```mermaid
+classDiagram
+	class Owner {
+		+name: str
+		+pets: List~Pet~
+		+add_pet(pet)
+		+get_pet_by_name(pet_name)
+		+get_all_tasks()
+	}
+
+	class Pet {
+		+name: str
+		+species: str
+		+tasks: List~Task~
+		+add_task(task)
+	}
+
+	class Task {
+		+description: str
+		+time: str
+		+frequency: str
+		+completed: bool
+		+pet_name: str
+		+due_date: date
+		+mark_complete()
+	}
+
+	class Scheduler {
+		+owner: Owner
+		+get_all_tasks()
+		+print_schedule()
+		+sort_by_time()
+		+filter_tasks(completed, pet_name)
+		+detect_conflicts()
+	}
+
+	Owner "1" --> "many" Pet
+	Pet "1" --> "many" Task
+	Scheduler "1" --> "1" Owner
+```
+
+## Demo
+
+Add your final Streamlit screenshot here after manual browser verification.
