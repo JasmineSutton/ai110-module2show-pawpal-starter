@@ -25,7 +25,7 @@ The main hardening work in this project focused on:
 - `pawpal_system.py` - backend model and scheduling logic
 - `tests/test_pawpal.py` - automated tests
 - `SECURITY_README.md` - detailed security hardening writeup
-- case study document - recruiter-facing summary of the hardening work
+- case study document - summary of the hardening work
 
 ## Running the project
 
