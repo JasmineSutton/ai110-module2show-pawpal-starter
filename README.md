@@ -44,10 +44,19 @@ pip install -r requirements.txt
 
 ## Smarter Scheduling
 
-- `Scheduler.sort_by_time()` orders tasks by date and time.
+- `Scheduler.sort_by_time()` keeps a pure chronological view available.
+- `Scheduler.sort_by_priority_then_time()` ranks tasks by priority first, then by date/time.
+- `Scheduler.find_next_available_slot()` searches for the first gap that fits a requested duration.
 - `Scheduler.filter_tasks()` supports filtering by completion state and pet name.
 - `Scheduler.detect_conflicts()` returns warnings for tasks that share the same date/time.
 - `Task.mark_complete()` creates the next task instance for daily and weekly tasks.
+- `Owner.save_to_json()` and `Owner.load_from_json()` persist pets and tasks to `data.json`.
+
+## Agent Mode Notes
+
+- Agent Mode was used to plan the JSON persistence work and the new advanced scheduling algorithm before code changes were applied.
+- The agent recommended custom `to_dict()` / `from_dict()` methods instead of a heavier serialization library, which kept the project small and easy to test.
+- The agent also recommended preserving `sort_by_time()` for backward compatibility while adding `sort_by_priority_then_time()` and `find_next_available_slot()` as separate methods.
 
 ## Testing PawPal+
 
@@ -59,63 +68,89 @@ python -m pytest
 
 Current tests cover:
 
-- Task completion updates status and recurrence behavior.
+- Task completion changes `completed` to `True`.
 - Adding a task increases a pet's task count.
-- Tasks are sorted chronologically.
-- Duplicate times are flagged as conflicts.
+- Tasks can be sorted both chronologically and by priority first, then time.
+- Daily and weekly recurrence generate the next correct due date.
+- Recurring tasks preserve `priority` and `duration_minutes`.
+- A `once` task returns `None` from `mark_complete()` (no next occurrence).
+- Duplicate pet names raise a `ValueError`.
+- Exact-match time conflicts are detected, while different times do not trigger warnings.
+- The next-available-slot algorithm finds the first valid gap and returns `None` when a window is full.
+- JSON persistence saves and reloads owner, pet, and task data correctly.
+- Missing JSON files are handled gracefully by returning a default empty owner.
+- Invalid time formats are rejected at task creation.
 
-## Confidence Level
-
-4/5
+**Confidence Level: 4/5** — all 17 tests pass. Remaining gaps: overlapping duration conflict warnings across partially overlapping tasks and multi-owner scenarios.
 
 ## Features
 
-- Sorting by time
-- Conflict warnings
-- Daily/weekly recurrence
-- Filtering by completion status or pet name
+- **Sorting by time** — `Scheduler.sort_by_time()` returns tasks ordered by date then HH:MM time.
+- **Priority-based scheduling** — `Scheduler.sort_by_priority_then_time()` ranks high-priority work ahead of medium and low.
+- **Today's schedule** — `Scheduler.get_todays_tasks()` filters to only today's due date.
+- **Conflict warnings** — `Scheduler.detect_conflicts()` returns a warning string for every time slot shared by two or more tasks.
+- **Daily recurrence** — `Task.mark_complete()` creates the next-day instance (due_date + 1) when frequency is `daily`.
+- **Weekly recurrence** — `Task.mark_complete()` creates the next-week instance (due_date + 7) when frequency is `weekly`.
+- **Next available slot** — `Scheduler.find_next_available_slot()` scans for the first open window that fits a requested duration.
+- **Filtering** — `Scheduler.filter_tasks()` narrows tasks by completion status, pet name, or both.
+- **JSON persistence** — `Owner.save_to_json()` and `Owner.load_from_json()` remember pets and tasks between runs.
+- **Input validation** — all user-supplied strings are sanitized and validated at construction (OWASP A03).
 
 ## Updated UML
 
 ```mermaid
 classDiagram
 	class Owner {
-		+name: str
-		+pets: List~Pet~
-		+add_pet(pet)
-		+get_pet_by_name(pet_name)
-		+get_all_tasks()
+		+String name
+		+List~Pet~ pets
+		+add_pet(pet: Pet) void
+		+get_pet_by_name(name: String) Pet
+		+get_all_tasks() List~Task~
+		+to_dict() dict
+		+save_to_json(file_path: String) void
+		+load_from_json(file_path: String) Owner
 	}
 
 	class Pet {
-		+name: str
-		+species: str
-		+tasks: List~Task~
-		+add_task(task)
+		+String name
+		+String species
+		+List~Task~ tasks
+		+add_task(task: Task) void
+		+to_dict() dict
+		+from_dict(data: dict) Pet
 	}
 
 	class Task {
-		+description: str
-		+time: str
-		+frequency: str
-		+completed: bool
-		+pet_name: str
-		+due_date: date
-		+mark_complete()
+		+String description
+		+String time
+		+String frequency
+		+bool completed
+		+String pet_name
+		+Date due_date
+		+int duration_minutes
+		+String priority
+		+mark_complete() Task
+		+to_dict() dict
+		+from_dict(data: dict) Task
 	}
 
 	class Scheduler {
-		+owner: Owner
-		+get_all_tasks()
-		+print_schedule()
-		+sort_by_time()
-		+filter_tasks(completed, pet_name)
-		+detect_conflicts()
+		+Owner owner
+		+get_all_tasks() List~Task~
+		+print_schedule() String
+		+sort_by_time() List~Task~
+		+sort_by_priority_then_time() List~Task~
+		+get_todays_tasks() List~Task~
+		+filter_tasks(completed: bool, pet_name: String) List~Task~
+		+detect_conflicts() List~String~
+		+find_next_available_slot(duration_minutes: int) Tuple~Date, String~
 	}
 
-	Owner "1" --> "many" Pet
-	Pet "1" --> "many" Task
-	Scheduler "1" --> "1" Owner
+	Owner "1" --> "0..*" Pet : owns
+	Pet "1" --> "0..*" Task : has
+	Pet ..> Task : sets pet_name
+	Owner ..> Pet : saves/loads
+	Scheduler "1" --> "1" Owner : manages
 ```
 
 ## Demo
