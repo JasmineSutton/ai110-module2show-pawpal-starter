@@ -1,8 +1,6 @@
 # PawPal+ Security Notes
 
-This document summarizes the security controls that were added to PawPal+ during development. These protections were not part of the original starter baseline; they were implemented as hardening work across the backend, UI, and local persistence flow.
-
-Scope note: this is a local demo app, not a deployed service. The goal here was to handle input safely, keep local persistence predictable, and avoid obvious failure modes or data corruption during normal use.
+This document summarizes the security controls that were added to PawPal+ during development. These protections were implemented as hardening work across the backend, UI, and local persistence flow.
 
 ---
 
@@ -99,7 +97,7 @@ Fix:
 
 ### B. JSON persistence needed safer write and load behavior
 
-Earlier, JSON was written directly to the target file, and corrupted JSON quietly fell back to an empty owner.
+Earlier, JSON was written directly to the target file, and corrupted JSON defaulted to an empty owner.
 
 Fix:
 
@@ -110,14 +108,13 @@ Fix:
 
 ## Reasonable Remaining Limits for a Local Demo
 
-No extra production-grade controls are really required for this project’s stated scope, but these limits are still worth being honest about:
+No extra production-grade controls are required for this project’s stated scope, but these limits were identified.
 
 - Conflict detection only checks exact matching time slots, not partially overlapping durations
 - The JSON file is local plain text and is not encrypted
 - The app assumes a single local user and does not try to handle concurrent file writes across multiple processes
 - `_sanitize()` removes HTML-like tags, but the bigger protection against rendered script content is still the app’s normal text rendering path
 
-For a local classroom demo, I think those are reasonable tradeoffs.
 
 ---
 
@@ -148,8 +145,6 @@ Current status: **19 tests pass**.
 ---
 
 ## Framework Mapping
-
-The project’s controls line up reasonably well with the following ideas:
 
 - **OWASP A03:2021 (Injection)**
   - Allowlist validation
